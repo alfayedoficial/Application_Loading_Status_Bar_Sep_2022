@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Application Loading Status Bar</string>
+    <string name="title_activity_details">DetailsActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="notification_action_check_status">Check the status</string>
+    <string name="notification_title">Udacity: Android Kotlin Nanodegree </string>
+    <string name="notification_description">The Project 3 repository is downloaded</string>
+    <string name="notification_button">See changes</string>
+    <string name="download_completed">Download Completed</string>
+
+    <string name="download_using_glide">Glide - Image Loading Library by BumpTech</string>
+    <string name="download_using_loadapp">LoadApp - Current repository by Udacity</string>
+    <string name="download_using_refrofit">Retrofit - Type-safe HTTP client for Android and Java by Square, Inc</string>
+
+    <string name="app_description">Download files from Internet</string>
+
+</resources>
