@@ -23,7 +23,7 @@ import com.alfayedoficial.applicationloadingstatusbar.databinding.ActivityMainBi
 import com.alfayedoficial.applicationloadingstatusbar.utilities.DownloadNotificationUtils
 import com.alfayedoficial.applicationloadingstatusbar.utilities.TemplateEnums
 import com.alfayedoficial.applicationloadingstatusbar.utilities.getDownloadManager
-import com.alfayedoficial.applicationloadingstatusbar.utilities.loading.ButtonState
+import com.alfayedoficial.applicationloadingstatusbar.utilities.ButtonState
 import com.alfayedoficial.applicationloadingstatusbar.utilities.setActivityToolbar
 import com.alfayedoficial.kotlinutils.kuRes
 

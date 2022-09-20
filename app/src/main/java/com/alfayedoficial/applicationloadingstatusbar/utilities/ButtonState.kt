@@ -1,4 +1,4 @@
-package com.alfayedoficial.applicationloadingstatusbar.utilities.loading
+package com.alfayedoficial.applicationloadingstatusbar.utilities
 
 sealed class ButtonState {
     object Clicked : ButtonState()

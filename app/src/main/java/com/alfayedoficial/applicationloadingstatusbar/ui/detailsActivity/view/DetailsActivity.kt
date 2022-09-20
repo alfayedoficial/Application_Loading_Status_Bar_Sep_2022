@@ -75,5 +75,5 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun onFinishClick() = dataBinder.detailContent.okButton.setOnClickListener { finishAffinity() }
+    private fun onFinishClick() = dataBinder.detailContent.btnOk.setOnClickListener { finishAffinity() }
 }

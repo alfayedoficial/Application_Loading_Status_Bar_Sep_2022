@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     >
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.constraintlayout.motion.widget.MotionLayout
         android:id="@+id/main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".MainActivity"
         tools:showIn="@layout/activity_main"
-        >
+        app:layoutDescription="@xml/container_main_scene">
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/start_guideline"
@@ -73,7 +73,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
         </RadioGroup>
 
-        <com.alfayedoficial.applicationloadingstatusbar.utilities.loading.LoadingButton
+        <com.alfayedoficial.applicationloadingstatusbar.utilities.LoadingButtonUtils
             android:id="@+id/loading_button"
             android:layout_width="0dp"
             android:layout_height="60dp"
@@ -81,12 +81,12 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/end_guideline"
             app:layout_constraintStart_toStartOf="@+id/start_guideline"
-            app:loadingDefaultBackgroundColor="?attr/colorPrimary"
-            app:loadingBackgroundColor="?attr/colorPrimaryDark"
-            app:loadingDefaultText="Download"
-            app:loadingText="We are loading"
-            app:loadingTextColor="@color/white"
+            app:buttonDefaultBackgroundColor="?attr/colorPrimary"
+            app:buttonBackgroundColor="?attr/colorPrimaryDark"
+            app:buttonDefaultText="Download"
+            app:buttonText="We are loading"
+            app:buttonTextColor="@color/white"
             />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.motion.widget.MotionLayout>
 </layout>
