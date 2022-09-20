@@ -1,17 +1,17 @@
 package com.alfayedoficial.applicationloadingstatusbar.ui.mainActivity.view
 
+import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.app.DownloadManager.*
 import android.app.DownloadManager.COLUMN_STATUS
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.database.ContentObserver
 import android.net.Uri
-import android.os.Build
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.RadioButton
@@ -34,16 +34,16 @@ class MainActivity : AppCompatActivity() {
         get() = _dataBinder!!
 
     private var downloadFileName = ""
+    private var downloadID: Long = NO_DOWNLOAD
     private var downloadContentObserver: ContentObserver? = null
     private var downloadNotificator: DownloadNotificationUtils? = null
-    private var downloadID: Long = NO_DOWNLOAD
 
 
     companion object {
-        private const val URL = "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
+        var URL = ""
         private const val NO_DOWNLOAD = 0L
+        private const val CHANNEL_ID = "channelId"
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,86 +56,64 @@ class MainActivity : AppCompatActivity() {
             lifecycleOwner = this@MainActivity
             activity = this@MainActivity
             mainToolbar.apply { setActivityToolbar(kuRes.getString(R.string.app_name), toolbar, tvNameToolbar) }
-            onLoadingButtonClicked()
+            onLoadingClick()
+            registerReceiver(onDownloadCompletedReceiver, IntentFilter(ACTION_DOWNLOAD_COMPLETE))
         }
     }
 
-    private fun ActivityMainBinding.onLoadingButtonClicked() {
-        with(mainContent) {
+    private fun onLoadingClick(){
+        dataBinder.mainContent.apply {
             loadingButton.setOnClickListener {
                 when (downloadOptionRadioGroup.checkedRadioButtonId) {
-                    View.NO_ID ->
-                        Toast.makeText(this@MainActivity, "Please select the file to download", Toast.LENGTH_SHORT).show()
-                    else -> {
+                    View.NO_ID -> Toast.makeText(this@MainActivity, "Please select an option to download", Toast.LENGTH_SHORT).show()
+                    else ->{
                         downloadFileName = findViewById<RadioButton>(downloadOptionRadioGroup.checkedRadioButtonId).text.toString()
-                        requestDownload()
+                        selectURL(downloadFileName)
+                        onRequestDownloadFile()
                     }
                 }
             }
         }
     }
 
-    private val onDownloadCompletedReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)?.apply {
-                val downloadStatus = getDownloadManager().queryStatus(this)
-                unregisterDownloadContentObserver()
-                downloadStatus.takeIf { status -> status != TemplateEnums.DownloadStatus.UNKNOWN }?.run {
-                    getDownloadNotificator().notify(downloadFileName, downloadStatus)
-                }
-            }
+    private fun selectURL(downloadFileName : String)  = when (downloadFileName) {
+        getString(R.string.download_using_glide)-> {
+            URL = "https://github.com/bumptech/glide/archive/master.zip"
         }
-    }
-
-    private fun getDownloadNotificator(): DownloadNotificationUtils = when (downloadNotificator) {
-        null -> DownloadNotificationUtils(this, lifecycle).also { downloadNotificator = it }
-        else -> downloadNotificator!!
-    }
-
-    private fun DownloadManager.queryStatus(id: Long): TemplateEnums.DownloadStatus {
-        query(DownloadManager.Query().setFilterById(id)).use {
-            with(it) {
-                if (this != null && moveToFirst()) {
-                    return when (getColumnIndex(COLUMN_STATUS)) {
-                        DownloadManager.STATUS_SUCCESSFUL -> TemplateEnums.DownloadStatus.SUCCESSFUL
-                        DownloadManager.STATUS_FAILED -> TemplateEnums.DownloadStatus.FAILED
-                        else -> TemplateEnums.DownloadStatus.UNKNOWN
-                    }
-                }
-                return TemplateEnums.DownloadStatus.UNKNOWN
-            }
+        getString(R.string.download_using_loadapp)-> {
+            URL = "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
         }
+        else -> {
+            URL = "https://github.com/square/retrofit/archive/master.zip"
+        }
+
     }
 
-    private fun requestDownload() {
-        with(getDownloadManager()) {
-            downloadID.takeIf { it != NO_DOWNLOAD }?.run {
-                val downloadsCancelled = remove(downloadID)
-                unregisterDownloadContentObserver()
-                downloadID = NO_DOWNLOAD
-            }
 
-            val request = DownloadManager.Request(Uri.parse(URL))
+    private fun onRequestDownloadFile() {
+        with(getDownloadManager()){
+
+            val request = Request(Uri.parse(URL))
                 .setTitle(getString(R.string.app_name))
                 .setDescription(getString(R.string.app_description))
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+                .setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .also {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         it.setRequiresCharging(false)
                     }
                 }
-                .setAllowedOverMetered(true)
-                .setAllowedOverRoaming(true)
 
             downloadID = enqueue(request)
-
-            createAndRegisterDownloadContentObserver()
+            downloadContentObserver()
         }
     }
 
-    private fun DownloadManager.createAndRegisterDownloadContentObserver() {
+    private fun DownloadManager.downloadContentObserver() {
         object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
-                downloadContentObserver?.run { queryProgress() }
+                downloadContentObserver?.run {  queryProgress() }
             }
         }.also {
             downloadContentObserver = it
@@ -147,28 +125,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("Range")
     private fun DownloadManager.queryProgress() {
-        query(DownloadManager.Query().setFilterById(downloadID)).use {
+        query(Query().setFilterById(downloadID)).use {
             with(it) {
                 if (this != null && moveToFirst()) {
-                    val id = getColumnIndex(DownloadManager.COLUMN_ID)
-                    when (getColumnIndex(COLUMN_STATUS)) {
-                        DownloadManager.STATUS_FAILED -> {
-                            Log.d("TAGG","Download $id: failed")
+                    // check download status
+                    val id = getInt(getColumnIndex(COLUMN_ID))
+                    when (getInt(getColumnIndex(COLUMN_STATUS))) {
+                        STATUS_FAILED -> {
+                            Log.i("Test_Download","Download $id: failed")
                             dataBinder.mainContent.loadingButton.changeButtonState(ButtonState.Completed)
                         }
-                        DownloadManager.STATUS_PAUSED -> {
-                            Log.d("TAGG","Download $id: paused")
+                        STATUS_PAUSED -> {
+                            Log.i("Test_Download","Download $id: paused")
                         }
-                        DownloadManager.STATUS_PENDING -> {
-                            Log.d("TAGG","Download $id: pending")
+                        STATUS_PENDING -> {
+                            Log.i("Test_Download","Download $id: pending")
                         }
-                        DownloadManager.STATUS_RUNNING -> {
-                            Log.d("TAGG","Download $id: running")
+                        STATUS_RUNNING -> {
+                            Log.i("Test_Download","Download $id: running")
                             dataBinder.mainContent.loadingButton.changeButtonState(ButtonState.Loading)
                         }
-                        DownloadManager.STATUS_SUCCESSFUL -> {
-                            Log.d("TAGG","Download $id: successful")
+                        STATUS_SUCCESSFUL -> {
+                            Log.i("Test_Download","Download $id: successful")
                             dataBinder.mainContent.loadingButton.changeButtonState(ButtonState.Completed)
                         }
                     }
@@ -176,7 +156,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -190,6 +169,40 @@ class MainActivity : AppCompatActivity() {
             contentResolver.unregisterContentObserver(it)
             downloadContentObserver = null
         }
+    }
+    private val onDownloadCompletedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val id = intent?.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
+            id?.let {
+                val downloadStatus = getDownloadManager().queryStatus(it)
+                Log.i("Test_Download","Download $it completed with status: ${downloadStatus.type}")
+                unregisterDownloadContentObserver()
+                downloadStatus.takeIf { status -> status != TemplateEnums.DownloadStatus.UNKNOWN }?.run {
+                    getDownloadNotificator().notify(downloadFileName, downloadStatus)
+                }
+            }
+        }
+    }
+
+    @SuppressLint("Range")
+    private fun DownloadManager.queryStatus(id: Long): TemplateEnums.DownloadStatus {
+        query(Query().setFilterById(id)).use {
+            with(it) {
+                if (this != null && moveToFirst()) {
+                    return when (getInt(getColumnIndex(COLUMN_STATUS))) {
+                        STATUS_SUCCESSFUL -> TemplateEnums.DownloadStatus.SUCCESSFUL
+                        STATUS_FAILED -> TemplateEnums.DownloadStatus.FAILED
+                        else -> TemplateEnums.DownloadStatus.UNKNOWN
+                    }
+                }
+                return TemplateEnums.DownloadStatus.UNKNOWN
+            }
+        }
+    }
+
+    private fun getDownloadNotificator(): DownloadNotificationUtils = when (downloadNotificator) {
+        null -> DownloadNotificationUtils(this, lifecycle).also { downloadNotificator = it }
+        else -> downloadNotificator!!
     }
 
 

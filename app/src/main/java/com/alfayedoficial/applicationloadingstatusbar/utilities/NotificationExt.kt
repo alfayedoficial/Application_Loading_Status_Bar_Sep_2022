@@ -40,38 +40,16 @@ fun NotificationManager.sendDownloadCompletedNotification(
         PendingIntent.FLAG_UPDATE_CURRENT
     )
 
-    // https://developer.android.com/training/notify-user/build-notification#Actions
-    val checkStatusAction = NotificationCompat.Action.Builder(
-        null,
-        context.getString(R.string.notification_action_check_status),
-        contentPendingIntent
-    ).build()
-
-    // TODO: Further improvement: Add a progress bar to keep track of Download progress
-    // https://developer.android.com/training/notify-user/build-notification#progressbar
+    val checkStatusAction = NotificationCompat.Action.Builder(null, context.getString(R.string.notification_action_check_status), contentPendingIntent).build()
 
     NotificationCompat.Builder(context, notification_channel_id) // Set the notification content
-        // https://developer.android.com/training/notify-user/build-notification#builder
         .setSmallIcon(R.drawable.ic_assistant_black_24dp)
         .setContentTitle(context.getString(R.string.notification_title))
         .setContentText(context.getString(R.string.notification_description))
-        // priority determines how intrusive the notification should be on Android 7.1 and lower.
-        // (For Android 8.0 and higher, you must instead set the channel importance—shown in the next section.)
-            // High priority makes a sound and appears as a heads up notification
-            // Default priority makes a sound
-            // Low priority makes no sound
-            // Min priority makes no sound and does not appear in the status bar
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        // Set the notification's tap action
-        // https://developer.android.com/training/notify-user/build-notification#click
         .setContentIntent(contentPendingIntent)
         .setAutoCancel(true)
-        // Add action buttons
-        // https://developer.android.com/training/notify-user/build-notification#Actions
         .addAction(checkStatusAction)
-        // Set lock screen visibility
-        // https://developer.android.com/training/notify-user/build-notification#lockscreenNotification
-            // VISIBILITY_PUBLIC shows the notification's full content
         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         .apply {
 
